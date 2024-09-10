@@ -1,8 +1,3 @@
-const isMobile =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-
 import Bird from "../actors/Bird.js";
 import Cactus from "../actors/Cactus.js";
 import Cloud from "../actors/Cloud.js";
@@ -15,100 +10,82 @@ import {
   randBoolean,
   randInteger,
 } from "../utils.js";
-import GameRunner from "./GameRunner.js";
+import GameRunner from "../game/GameRunner.js";
 
-export default class DinoGame extends GameRunner {
-  constructor(width, height) {
-    super();
-    this.width = null;
-    this.height = null;
-    this.canvas = this.createCanvas(width, height);
-    this.canvasCtx = this.canvas.getContext("2d");
-    this.spriteImage = null;
-    this.spriteImageData = null;
+const isMobile =
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
 
-    /*
-     * units
-     * fpa: frames per action
-     * ppf: pixels per frame
-     * px: pixels
-     */
-    this.defaultSettings = {
-      bgSpeed: 8, // ppf
-      birdSpeed: 7.2, // ppf
-      birdSpawnRate: 240, // fpa
-      birdWingsRate: 15, // fpa
-      cactiSpawnRate: 100, // fpa
-      cloudSpawnRate: 50, // fpa
-      cloudSpeed: 2, // ppf
-      dinoGravity: 0.6, // ppf
-      dinoGroundOffset: 4, // px
-      dinoLegsRate: 6, // fpa
-      dinoLift: 22, // ppf
-      scoreBlinkRate: 20, // fpa
-      scoreIncreaseRate: 6, // fpa
-    };
-
-    this.state = {
-      settings: { ...this.defaultSettings },
-      birds: [],
-      cacti: [],
-      clouds: [],
-      dino: null,
-      gameOver: false,
-      groundX: 0,
-      groundY: 0,
-      isRunning: false,
-      level: 0,
-      score: {
-        blinkFrames: 0,
-        blinks: 0,
-        isBlinking: false,
-        value: 0,
-      },
-    };
-  }
-  // ref for canvas pixel density:
-  // https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio#correcting_resolution_in_a_%3Ccanvas%3E
-  createCanvas(width, height) {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const scale = window.devicePixelRatio;
-
-    this.width = width;
-    this.height = height;
-    canvas.style.width = width + "px";
-    canvas.style.height = height + "px";
-    canvas.width = Math.floor(width * scale);
-    canvas.height = Math.floor(height * scale);
-    ctx.scale(scale, scale);
-
-    document.body.appendChild(canvas);
-    return canvas;
-  }
-
-  async preload() {
-    const { settings } = this.state;
-    const [spriteImage] = await Promise.all([
-      loadImage("./assets/sprite.png"),
-    ]);
-    this.spriteImage = spriteImage;
-    this.spriteImageData = getImageData(spriteImage);
-    const dino = new Dino(this.spriteImageData);
-
-    if (isMobile) {
-      dino.width *= 2;
-      dino.height *= 2;
+  export default class DinoGame extends GameRunner {
+    constructor(canvas, width, height) {
+      super();
+      this.canvas = canvas; // Usa el canvas que recibe desde React
+      this.canvasCtx = this.canvas.getContext("2d");
+      this.width = width;
+      this.height = height;
+      this.spriteImage = null;
+      this.spriteImageData = null;
+  
+      this.defaultSettings = {
+        bgSpeed: 8,
+        birdSpeed: 7.2,
+        birdSpawnRate: 240,
+        birdWingsRate: 15,
+        cactiSpawnRate: 100,
+        cloudSpawnRate: 50,
+        cloudSpeed: 2,
+        dinoGravity: 0.6,
+        dinoGroundOffset: 4,
+        dinoLegsRate: 6,
+        dinoLift: 22,
+        scoreBlinkRate: 20,
+        scoreIncreaseRate: 6,
+      };
+  
+      this.state = {
+        settings: { ...this.defaultSettings },
+        birds: [],
+        cacti: [],
+        clouds: [],
+        dino: null,
+        gameOver: false,
+        groundX: 0,
+        groundY: 0,
+        isRunning: false,
+        level: 0,
+        score: {
+          blinkFrames: 0,
+          blinks: 0,
+          isBlinking: false,
+          value: 0,
+        },
+      };
     }
-
-    dino.legsRate = settings.dinoLegsRate;
-    dino.lift = settings.dinoLift;
-    dino.gravity = settings.dinoGravity;
-    dino.x = 25;
-    dino.baseY = this.height - settings.dinoGroundOffset;
-    this.state.dino = dino;
-    this.state.groundY = this.height - sprites.ground.h / 2;
-  }
+  
+    async preload() {
+      const { settings } = this.state;
+      const [spriteImage] = await Promise.all([
+        loadImage("/assets/sprite.png"), // Ruta a la imagen en el directorio "public" de React
+      ]);
+      this.spriteImage = spriteImage;
+      this.spriteImageData = getImageData(spriteImage);
+      const dino = new Dino(this.spriteImageData);
+  
+      if (isMobile) {
+        dino.width *= 2;
+        dino.height *= 2;
+      }
+  
+      dino.legsRate = settings.dinoLegsRate;
+      dino.lift = settings.dinoLift;
+      dino.gravity = settings.dinoGravity;
+      dino.x = 25;
+      dino.baseY = this.height - settings.dinoGroundOffset;
+      this.state.dino = dino;
+      this.state.groundY = this.height - sprites.ground.h / 2;
+    }
+  
 
   onFrame() {
     const { state } = this;
@@ -143,11 +120,13 @@ export default class DinoGame extends GameRunner {
   onInput(type) {
     const { state } = this;
     const errorMessage = document.getElementById("error-message");
-
-    setTimeout(() => {
-      errorMessage.style.display = "none";
-    }, 3000);
-
+  
+    if (errorMessage) {
+      setTimeout(() => {
+        errorMessage.style.display = "none";
+      }, 3000);
+    }
+  
     switch (type) {
       case "jump": {
         if (state.isRunning) {
@@ -161,14 +140,14 @@ export default class DinoGame extends GameRunner {
         }
         break;
       }
-
+  
       case "duck": {
         if (state.isRunning) {
           state.dino.duck(true);
         }
         break;
       }
-
+  
       case "stop-duck": {
         if (state.isRunning) {
           state.dino.duck(false);
@@ -177,6 +156,7 @@ export default class DinoGame extends GameRunner {
       }
     }
   }
+  
 
   resetGame() {
     this.state.dino.reset();
@@ -206,7 +186,6 @@ export default class DinoGame extends GameRunner {
   }
 
   endGame() {
-    const padding = 15;
 
     const playAgainButton = document.createElement("button");
     playAgainButton.textContent = "AGAIN";
