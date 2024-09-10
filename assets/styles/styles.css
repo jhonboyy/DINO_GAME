@@ -1,0 +1,19 @@
+* {
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+  }
+  @font-face {
+    font-family: 'Favorit';
+    src: url(../fonts/ABCFavoritMono-Light.woff);
+  }
