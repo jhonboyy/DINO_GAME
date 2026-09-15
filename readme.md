@@ -17,13 +17,23 @@ This project uses [Vite](https://vitejs.dev/) for development and building.
 - **Start dev server**: `pnpm dev`
 - **Build for production**: `pnpm build`
 - **Preview build**: `pnpm preview`
+- **Deploy manually**: `pnpm deploy`
 
-## Deployment (Cloudflare Pages)
+## Deployment (Cloudflare Workers)
 
-The project is configured for Cloudflare Pages.
+The project is deployed to Cloudflare Workers using [Static Assets](https://developers.cloudflare.com/workers/static-assets/) and the [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) Git integration.
 
-- **Build output directory**: `dist`
-- **Build command**: `pnpm build`
+- **Assets directory**: `dist`
+- **Worker**: `dino-game`
+
+### Connect GitHub (one-time setup)
+1. In the Cloudflare dashboard, go to **Workers & Pages** → `dino-game`.
+2. Go to **Settings → Builds → Connect** and authorize the **Cloudflare Workers and Pages** GitHub App.
+3. Select the repository and set:
+   - **Build command**: `pnpm build`
+   - **Deploy command**: `npx wrangler deploy`
+
+From then on, every push triggers an automatic build and deploy.
 
 ## License
 
@@ -32,9 +42,11 @@ The project is configured for Cloudflare Pages.
 
 ## 🌍 Deployment & Branching Workflow
 
-This project uses a two-branch workflow integrated with Cloudflare Pages:
-*   **`develop`**: For ongoing features, bug fixes, and development. Pushing here automatically deploys to the **Staging/Preview** environment.
-*   **`main`**: Production release branch. Pushing here automatically deploys to the **Production** environment.
+This project uses a two-branch workflow integrated with Workers Builds:
+*   **`main`**: Production branch. Pushing here automatically deploys to the live Worker (`dino-game`).
+*   **`develop`**: For ongoing features, bug fixes, and development. Pushes to non-production branches create **preview deployments** (via `wrangler versions upload`) with their own preview URLs.
+
+To also build non-production branches, enable **Builds for non-production branches** under *Settings → Build → Branch control* in the Cloudflare dashboard.
 
 ### Release Workflow (Fast-Forward + Tags)
 When ready to release changes from `develop` to production `main`:
@@ -46,7 +58,7 @@ When ready to release changes from `develop` to production `main`:
    ```bash
    git merge develop --ff-only
    ```
-3. Push to production `main` (triggers the production build):
+3. Push to production `main` (triggers the production deploy):
    ```bash
    git push origin main
    ```
